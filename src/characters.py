@@ -1,17 +1,20 @@
 import points as pt
 import collections
 from graph import moveWithoutBreakingWalls
+from threading import Timer
 
 barbarians = []
 dragons = []
 balloons = []
 archers = []
+stealth_archers = []
 
 troops_spawned = {
     'barbarian': 0,
     'archer': 0,
     'dragon': 0,
-    'balloon': 0
+    'balloon': 0,
+    'stealth_archer': 0
 }
 
 
@@ -20,10 +23,12 @@ def clearTroops():
     dragons.clear()
     balloons.clear()
     archers.clear()
+    stealth_archers.clear()
     troops_spawned['barbarian'] = 0
     troops_spawned['dragon'] = 0
     troops_spawned['balloon'] = 0
     troops_spawned['archer'] = 0
+    troops_spawned['stealth_archer'] = 0
 
 
 class Barbarian:
@@ -380,6 +385,24 @@ class Archer:
             self.health = self.max_health
 
 
+class Stealth_Archer(Archer):
+    def __init__(self, position):
+        super().__init__(position)
+        self.invisible = True
+        self.invisibility_duration = 10
+        r = Timer(self.invisibility_duration,self.become_visible)
+        try:
+            r.start()
+        except:
+            exit()
+
+    def become_visible(self):
+        self.invisible = False
+
+    def kill(self):
+        self.alive = False
+        stealth_archers.remove(self)
+
 class Dragon:
     def __init__(self, position):
         self.speed = 1
@@ -638,6 +661,16 @@ def spawnArcher(pos):
     troops_spawned['archer'] += 1
     archers.append(archer)
 
+def spawnStealthArcher(pos):
+    if(pt.troop_limit['stealth_archer'] <= troops_spawned['stealth_archer']):
+        return
+
+    # convert tuple to list
+    pos = list(pos)
+    stealth_archer = Stealth_Archer(pos)
+    troops_spawned['stealth_archer'] += 1
+    stealth_archers.append(stealth_archer)
+
 def spawnDragon(pos):
     if(pt.troop_limit['dragon'] <= troops_spawned['dragon']):
         return
@@ -682,8 +715,9 @@ def move_barbarians(V,type):
             barb.move(closest_building, V, type)
 
 def move_archers(V,type):
+    all_archers = archers + stealth_archers
     if(type == 1):
-        for archer in archers:
+        for archer in all_archers:
             if(archer.alive == False):
                 continue
             if archer.target != None:
@@ -695,13 +729,35 @@ def move_archers(V,type):
                 continue
             archer.move(archer.target, V,type)
     elif(type == 2):
-        for archer in archers:
+        for archer in all_archers:
             if(archer.alive == False):
                 continue
             closest_building = search_for_closest_building(archer.position, V.map, 0)
             if(closest_building == None):
                 continue
             archer.move(closest_building, V, type)
+
+# def move_archers(V,type):
+#     if(type == 1):
+#         for archer in archers:
+#             if(archer.alive == False):
+#                 continue
+#             if archer.target != None:
+#                 if(V.map[archer.target[0]][archer.target[1]] == pt.BLANK):
+#                     archer.target = None
+#             if(archer.target == None):
+#                 archer.target = search_for_closest_building(archer.position, V.map, 0)
+#             if(archer.target == None):
+#                 continue
+#             archer.move(archer.target, V,type)
+#     elif(type == 2):
+#         for archer in archers:
+#             if(archer.alive == False):
+#                 continue
+#             closest_building = search_for_closest_building(archer.position, V.map, 0)
+#             if(closest_building == None):
+#                 continue
+#             archer.move(closest_building, V, type)
 
 def move_dragons(V):
     for dr in dragons:
