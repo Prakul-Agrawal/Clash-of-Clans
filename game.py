@@ -23,7 +23,6 @@ level = 1
 V = village.createVillage(level)
 
 
-
 def Phealth(health_bar):
     if(King.health > 0):
         print()
@@ -36,8 +35,6 @@ def Phealth(health_bar):
         for i in range(len(health_bar)):
             print(health_bar[i], end='')
         print('')
-
-
 
 
 os.system('clear')
@@ -77,16 +74,6 @@ def init_level(level):
     clearTroops()
     printMap(V)
     Phealth(showKingHealth(King.health))
-
-# clear terminal
-
-# #reposition cursor to top left
-# print("\033[%d;%dH" % (0, 0), end='')
-
-# while True:
-#     pass
-
-
 
 
 while(True):
@@ -148,7 +135,7 @@ while(True):
         os.system('clear')
         print('quit')
         break
-    # os.system('clear')
+
     move_barbarians(V,pt.movement,King)
     move_archers(V,pt.movement,King)
     move_dragons(V, King)
