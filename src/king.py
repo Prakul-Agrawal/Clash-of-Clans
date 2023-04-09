@@ -73,7 +73,13 @@ class King:
             return
         options = V.get_attack_options(self.position,self.attack_radius)
         for pos in options:
-            self.attack_target(options[pos],self.AoE)
+            target = options[pos]
+            attack = self.AoE
+            target.health -= attack
+            if target.health <= 0:
+                target.health = 0
+                target.destroy(self)
+
 
     def normalAttack(self,V):
         if(self.alive == False):
