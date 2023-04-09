@@ -8,13 +8,15 @@ dragons = []
 balloons = []
 archers = []
 stealth_archers = []
+healers = []
 
 troops_spawned = {
     'barbarian': 0,
     'archer': 0,
     'dragon': 0,
     'balloon': 0,
-    'stealth_archer': 0
+    'stealth_archer': 0,
+    'healer': 0
 }
 
 
@@ -23,12 +25,14 @@ def clearTroops():
     dragons.clear()
     balloons.clear()
     archers.clear()
+    healers.clear()
     stealth_archers.clear()
     troops_spawned['barbarian'] = 0
     troops_spawned['dragon'] = 0
     troops_spawned['balloon'] = 0
     troops_spawned['archer'] = 0
     troops_spawned['stealth_archer'] = 0
+    troops_spawned['healer'] = 0
 
 
 class Barbarian:
@@ -146,6 +150,8 @@ class Barbarian:
                 for i in range(self.speed):
                     r = self.position[0] + 1
                     c = self.position[1]
+                    if r < 0 or r >= pt.config['dimensions'][0] or c < 0 or c >= pt.config['dimensions'][1]:
+                        return
                     if(self.check_for_walls(r, c, vmap)):
                         self.break_wall(r, c, V)
                         return
@@ -154,13 +160,15 @@ class Barbarian:
                 for i in range(self.speed):
                     r = self.position[0] - 1
                     c = self.position[1]
+                    if r < 0 or r >= pt.config['dimensions'][0] or c < 0 or c >= pt.config['dimensions'][1]:
+                        return
                     if(self.check_for_walls(r, c, vmap)):
                         self.break_wall(r, c, V)
                         return
                     self.position[0] -= 1
 
     def check_for_walls(self, x, y, vmap):
-        if(vmap[x][y] == pt.WALL):
+        if vmap[x][y] == pt.WALL:
             return True
         return False
 
@@ -402,6 +410,134 @@ class Stealth_Archer(Archer):
     def kill(self):
         self.alive = False
         stealth_archers.remove(self)
+
+
+class Healer:
+    def __init__(self, position):
+        self.speed = 1
+        self.health = 250
+        self.max_health = 250
+        # self.attack = 5
+        self.position = position
+        self.alive = True
+        self.heal_strength = 20
+        self.heal_radius = 1
+        self.range = 7
+
+    def isInHealRange(self,pos):
+        r = abs(pos[0] - self.position[0])
+        c = abs(pos[1] - self.position[1])
+        if(r**2 + c**2 <= self.range**2):
+            return True
+        return False    
+
+    def move(self, pos, King):
+        if(self.alive == False):
+            return
+        r = abs(pos[0] - self.position[0])
+        c = abs(pos[1] - self.position[1])
+        if(self.isInHealRange(pos)):
+            self.heal_target(pos,King)
+            return
+        elif(r == 0):
+            if(pos[1] > self.position[1]):
+                for i in range(self.speed):
+                    r = self.position[0]
+                    c = self.position[1] + 1
+                    self.position[1] += 1
+                    if(self.isInHealRange(pos)):
+                        break
+            else:
+                for i in range(self.speed):
+                    r = self.position[0]
+                    c = self.position[1] - 1
+                    self.position[1] -= 1
+                    if(self.isInHealRange(pos)):
+                        break
+        elif(r > 1):
+            if(pos[0] > self.position[0]):
+                for i in range(self.speed):
+                    r = self.position[0] + 1
+                    c = self.position[1]
+                    self.position[0] += 1
+                    if(self.position[0] == pos[0] or self.isInHealRange(pos)):
+                        return
+            else:
+                for i in range(self.speed):
+                    r = self.position[0] - 1
+                    c = self.position[1]
+                    self.position[0] -= 1
+                    if(self.position[0] == pos[0] or self.isInHealRange(pos)):
+                        return
+        elif(c > 1):
+            if(pos[1] > self.position[1]):
+                for i in range(self.speed):
+                    r = self.position[0]
+                    c = self.position[1] + 1
+                    self.position[1] += 1
+                    if(self.position[1] == pos[1] or self.isInHealRange(pos)):
+                        return
+            else:
+                for i in range(self.speed):
+                    r = self.position[0]
+                    c = self.position[1] - 1
+                    self.position[1] -= 1
+                    if(self.position[1] == pos[1] or self.isInHealRange(pos)):
+                        return
+        elif(r+c == 2):
+            if(pos[0] > self.position[0]):
+                for i in range(self.speed):
+                    r = self.position[0] + 1
+                    c = self.position[1]
+                    self.position[0] += 1
+                    if(self.isInHealRange(pos)):
+                        break
+            else:
+                for i in range(self.speed):
+                    r = self.position[0] - 1
+                    c = self.position[1]
+                    self.position[0] -= 1
+                    if(self.isInHealRange(pos)):
+                        break
+
+    def heal_target(self, pos, King):
+        if(self.alive == False):
+            return
+        i = pos[0] - self.heal_radius
+        j = pos[1] - self.heal_radius
+        troops = barbarians+ archers + dragons + balloons + stealth_archers
+        if King.alive:
+            troops += [King]
+        for row in range(i, i+2*self.heal_radius+1):
+            for col in range(j, j+2*self.heal_radius+1):
+                if(row < 0 or col < 0 or row >= pt.config['dimensions'][0] or col >= pt.config['dimensions'][1]):
+                    continue
+                for troop in troops:
+                    if(troop.position[0] == row and troop.position[1] == col):
+                        troop.health += self.heal_strength
+                        troop.health = min(troop.health,troop.max_health) 
+
+    def kill(self):
+        self.alive = False
+        healers.remove(self)
+
+    def deal_damage(self, hit):
+        if(self.alive == False):
+            return
+        self.health -= hit
+        if self.health <= 0:
+            self.health = 0
+            self.kill()
+
+    def rage_effect(self):
+        self.speed = self.speed*2
+        self.heal_strength = self.heal_strength*2
+
+    def heal_effect(self):
+        self.health = self.health*1.5
+        if self.health > self.max_health:
+            self.health = self.max_health
+
 
 class Dragon:
     def __init__(self, position):
@@ -671,6 +807,16 @@ def spawnStealthArcher(pos):
     troops_spawned['stealth_archer'] += 1
     stealth_archers.append(stealth_archer)
 
+def spawnHealer(pos):
+    if(pt.troop_limit['healer'] <= troops_spawned['healer']):
+        return
+
+    # convert tuple to list
+    pos = list(pos)
+    hl = Healer(pos)
+    troops_spawned['healer'] += 1
+    healers.append(hl)
+
 def spawnDragon(pos):
     if(pt.troop_limit['dragon'] <= troops_spawned['dragon']):
         return
@@ -737,27 +883,14 @@ def move_archers(V,type):
                 continue
             archer.move(closest_building, V, type)
 
-# def move_archers(V,type):
-#     if(type == 1):
-#         for archer in archers:
-#             if(archer.alive == False):
-#                 continue
-#             if archer.target != None:
-#                 if(V.map[archer.target[0]][archer.target[1]] == pt.BLANK):
-#                     archer.target = None
-#             if(archer.target == None):
-#                 archer.target = search_for_closest_building(archer.position, V.map, 0)
-#             if(archer.target == None):
-#                 continue
-#             archer.move(archer.target, V,type)
-#     elif(type == 2):
-#         for archer in archers:
-#             if(archer.alive == False):
-#                 continue
-#             closest_building = search_for_closest_building(archer.position, V.map, 0)
-#             if(closest_building == None):
-#                 continue
-#             archer.move(closest_building, V, type)
+def move_healers(King):
+    for hl in healers:
+        if(hl.alive == False):
+            continue
+        closest_target_troop = search_for_heal_target(King, hl.position)
+        if(closest_target_troop == None):
+            continue
+        hl.move(closest_target_troop, King)
 
 def move_dragons(V):
     for dr in dragons:
@@ -776,6 +909,28 @@ def move_balloons(V):
         if(closest_building == None):
             continue
         bal.move(closest_building, V)
+
+def search_for_heal_target(King, pos):
+    closest_damaged_troop = None
+    closest_troop = None
+    closest_dist = 10000
+    closest_damaged_dist = 10000
+    troops = barbarians + archers + stealth_archers + dragons + balloons
+    if King.alive:
+        troops += [King]
+    for troop in troops:
+        dist = abs(troop.position[0] - pos[0]) + abs(troop.position[1] - pos[1])
+        if troop.max_health > troop.health:
+            if dist < closest_damaged_dist:
+                closest_damaged_dist = dist
+                closest_damaged_troop = (troop.position[0], troop.position[1])
+        else:
+            if dist < closest_dist:
+                closest_dist = dist
+                closest_troop = (troop.position[0], troop.position[1])
+    if (closest_damaged_troop):
+        return closest_damaged_troop
+    return closest_troop
 
 def search_for_closest_building(pos, vmap, prioritized):
     closest_building = None

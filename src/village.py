@@ -202,7 +202,7 @@ class Village:
                 return 1
             else:
                 return 2
-        elif King.alive == False and len(barbarians) == 0 and len(dragons) == 0 and len(balloons) == 0 and len(archers) == 0 and len(stealth_archers):
+        elif King.alive == False and len(barbarians) == 0 and len(dragons) == 0 and len(balloons) == 0 and len(archers) == 0 and len(stealth_archers) == 0:
             return 3
         else:
             return 0

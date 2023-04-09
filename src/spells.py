@@ -1,4 +1,4 @@
-from characters import barbarians, dragons, balloons, archers, stealth_archers
+from characters import barbarians, dragons, balloons, archers, stealth_archers, healers
 
 
 def rage_spell(King):
@@ -13,6 +13,9 @@ def rage_spell(King):
     for stl in stealth_archers:
         if stl.alive == True:
             stl.rage_effect()
+    for hl in healers:
+        if hl.alive == True:
+            hl.rage_effect()
     for dr in dragons:
         if dr.alive == True:
             dr.rage_effect()
@@ -32,6 +35,9 @@ def heal_spell(King):
     for stl in stealth_archers:
         if stl.alive == True:
             stl.heal_effect()
+    for hl in healers:
+        if hl.alive == True:
+            hl.heal_effect()
     for dr in dragons:
         if dr.alive == True:
             dr.heal_effect()
