@@ -4,9 +4,10 @@ from characters import barbarians, dragons, balloons, archers, stealth_archers, 
 
 
 class Building:
-    def destroy(self):
+    def destroy(self,King):
         self.destroyed = True
         if self.type == 'wall':
+            self.explode(King)
             self.V.remove_wall(self)
         elif self.type == 'hut':
             self.V.remove_hut(self)
@@ -30,17 +31,18 @@ class Hut(Building):
 
 
 class Cannon(Building):
-    def __init__(self, position, V):
+    def __init__(self, position, V, level):
         self.position = position
         self.dimensions = (2, 2)
         self.V = V
         self.destroyed = False
-        self.health = 60
-        self.max_health = 60
+        self.max_health = 60 + 30 * level
+        self.health = self.max_health
         self.type = 'cannon'
-        self.attack = 5
-        self.attack_radius = 5
+        self.attack = 4 + level
+        self.attack_radius = 5 + level / 2
         self.isShooting = False
+        self.level = level
 
     def scan_for_targets(self, King):
         self.isShooting = False
@@ -72,15 +74,34 @@ class Cannon(Building):
 
 
 class Wall(Building):
-    def __init__(self, position, V):
+    def __init__(self, position, V, level):
         self.position = position
         self.dimensions = (1, 1)
         self.V = V
         self.destroyed = False
-        self.health = 20
-        self.max_health = 20
+        self.max_health = 100 + 40 * level
+        self.health = self.max_health
         self.type = 'wall'
+        self.level = level
+        self.explosion_damage = 200
+        self.explosion_radius = 2
 
+    def explode(self, King):
+        if (not self.destroyed or self.level < 3):
+            return
+        troops = barbarians + archers + stealth_archers
+        if King.alive:
+            troops += [King]
+        i = self.position[0] - self.explosion_radius
+        j = self.position[1] - self.explosion_radius
+        for row in range(i, i+2*self.explosion_radius+1):
+            for col in range(j, j+2*self.explosion_radius+1):
+                if(row < 0 or col < 0 or row >= pt.config['dimensions'][0] or col >= pt.config['dimensions'][1]):
+                    continue
+                for troop in troops:
+                    if(troop.position[0] == row and troop.position[1] == col):
+                        troop.deal_damage(self.explosion_damage)
+        
 
 class TownHall(Building):
     def __init__(self, position, V):
@@ -94,17 +115,18 @@ class TownHall(Building):
 
 
 class WizardTower(Building):
-    def __init__(self, position, V):
+    def __init__(self, position, V, level):
         self.position = position
         self.dimensions = (1, 1)
         self.V = V
         self.destroyed = False
-        self.health = 60
-        self.max_health = 60
+        self.max_health = 60 + 30 * level
+        self.health = self.max_health
         self.type = 'wizardtower'
-        self.attack = 5
-        self.attack_radius = 5
+        self.attack = 4 + level
+        self.attack_radius = 5 + level / 2
         self.isShooting = False
+        self.level = level
 
     def scan_for_targets(self, King):
         self.isShooting = False

@@ -60,13 +60,13 @@ class King:
                 self.position[1] += 1
         pt.HERO_POS = self.position
     
-    def attack_target(self, target,attack):
+    def attack_target(self, target, attack):
         if(self.alive == False):
             return
         target.health -= attack
         if target.health <= 0:
             target.health = 0
-            target.destroy()
+            target.destroy(self)
 
     def specialAttack(self,V):
         if(self.alive == False):
@@ -184,7 +184,7 @@ class Queen:
         target.health -= attack
         if target.health <= 0:
             target.health = 0
-            target.destroy()
+            target.destroy(self)
 
     def specialAttack(self,V):
         if(self.alive == False):
