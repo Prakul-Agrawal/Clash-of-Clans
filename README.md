@@ -41,6 +41,18 @@
 - o : spawn at point 2
 - p : spawn at point 3
 
+### Stealth Archer :
+
+- t : spawn at point 1
+- y : spawn at point 2
+- u : spawn at point 3
+
+### Healer :
+
+- m : spawn at point 1
+- , : spawn at point 2
+- . : spawn at point 3
+
 ### Balloon :
 
 - j : spawn at point 1
@@ -59,3 +71,14 @@ q : Quit Game
     - Dragon : 3
 - You have to choose the type of troop movement at start of the game.
 - You have to choose the hero after each level.
+
+## Things to keep in mind:
+
+- Stealth Archers are invisible for 10 seconds. Otherwise they behave and look exactly like Archers (only while invisible, they have an _i_ symbol).
+- Healers can fly over all buildings.
+- Healers target the closest damaged troop first (which can change dynamically). However, if there are no damaged troops, then they target the closest troop.
+- Manhattan or Euclidean distance are followed based on the way it was implemented for all other troops in the codebase, for uniformity.
+- Current limit for number of Stealth Archers and Healers is 5 each.
+- Implemented Bonus Building Levels as well.
+- All buildings (except Huts and Townhall) are set to `building_level = 2 * game_level - 1`.
+- Walls remain the same colour throughout, and disappear after they are destroyed.  
